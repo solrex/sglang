@@ -121,7 +121,7 @@ def cutlass_block_fp8_supported() -> bool:
         major, minor = torch.cuda.get_device_capability()
         sm_version = major * 10 + minor
         cuda_version = tuple(map(int, torch.version.cuda.split(".")))
-        if cuda_version >= (12, 0) and sm_version >= 90:
+        if cuda_version >= (12, 0) and sm_version >= 89:
             return True
     return False
 
@@ -193,6 +193,9 @@ def cutlass_w8a8_block_fp8_linear_with_fallback(
 
     # TODO: add more robust shape check here
     shape_supported = weight.shape[0] % 128 == 0 and weight.shape[1] % 128 == 0
+    # Specialized for SM89
+    if not shape_supported and get_device_capability() == (8, 9):
+        shape_supported = weight.shape[0] % 64 == 0 and weight.shape[1] % 64 == 0
 
     if not shape_supported:
         # fallback to triton
