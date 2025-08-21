@@ -6,7 +6,7 @@ import triton  # Added import
 import triton.testing  # Added import
 from transformers import AutoConfig
 
-from sglang.srt.layers.moe.cutlass_moe import cutlass_fused_experts
+from sglang.srt.layers.moe.cutlass_moe import cutlass_fused_experts_fp8
 from sglang.srt.layers.moe.fused_moe_triton.fused_moe import fused_experts
 
 
@@ -125,7 +125,7 @@ def run_test(tp_size, batch_size, model_config, check=False):
     problem_sizes2 = torch.empty((E, 3), dtype=torch.int32, device="cuda")
 
     # --- Lambdas for Benchmarking ---
-    cutlass_lambda = lambda: cutlass_fused_experts(
+    cutlass_lambda = lambda: cutlass_fused_experts_fp8(
         x,
         w1.transpose(1, 2),  # Transposed
         w2.transpose(1, 2),  # Transposed
@@ -153,9 +153,8 @@ def run_test(tp_size, batch_size, model_config, check=False):
         x,
         w1,
         w2,
-        topk_weights,
-        topk_ids,
-        inplace=False,  # Use False for benchmarking to avoid side effects if run multiple times
+        (topk_weights, topk_ids, "dummy"),
+        inplace=False,
         activation="silu",  # Assuming SiLU activation common in MoEs
         use_fp8_w8a8=True,
         w1_scale=w1_scale,
@@ -193,7 +192,7 @@ def run_test(tp_size, batch_size, model_config, check=False):
         print("Running correctness check...")
         with torch.no_grad():
             # Run CUTLASS version (requires transposed weights)
-            y_cutlass = cutlass_fused_experts(
+            y_cutlass = cutlass_fused_experts_fp8(
                 x,
                 w1.transpose(1, 2),  # Transposed
                 w2.transpose(1, 2),  # Transposed
@@ -221,8 +220,7 @@ def run_test(tp_size, batch_size, model_config, check=False):
                 x,
                 w1,  # Original shape
                 w2,  # Original shape
-                topk_weights,
-                topk_ids,
+                (topk_weights, topk_ids, "dummy"),
                 inplace=False,  # Important: Use False to get output tensor
                 activation="silu",
                 use_fp8_w8a8=True,
@@ -266,7 +264,7 @@ if __name__ == "__main__":
         "--batch-sizes",
         type=int,
         nargs="+",
-        default=[1, 4, 8, 16, 32, 64, 128, 256, 512],  # Adjusted default
+        default=[1, 4, 8, 16, 32, 64, 128, 256, 512, 1024],  # Adjusted default
         help="List of batch sizes to test",
     )
     parser.add_argument("--check", action="store_true", help="Enable check mode")
