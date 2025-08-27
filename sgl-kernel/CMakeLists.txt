@@ -45,7 +45,7 @@ include(FetchContent)
 FetchContent_Declare(
     repo-cutlass
     GIT_REPOSITORY https://github.com/solrex/cutlass
-    GIT_TAG        79a62dfdc495a5697e2148a12fa4fc89feed414f
+    GIT_TAG        41c55641c6ff64a64e284e82853638676c996040
     GIT_SHALLOW    OFF
 )
 FetchContent_Populate(repo-cutlass)
@@ -193,7 +193,7 @@ endif()
 if ("${CUDA_VERSION}" VERSION_GREATER_EQUAL "12.4" OR SGL_KERNEL_ENABLE_SM90A)
     set(SGL_KERNEL_ENABLE_FA3 ON)
     list(APPEND SGL_KERNEL_CUDA_FLAGS
-        "-gencode=arch=compute_90a,code=sm_90a"
+        "" #-gencode=arch=compute_90a,code=sm_90a"
     )
 endif()
 
@@ -355,7 +355,7 @@ if (SGL_KERNEL_ENABLE_FA3)
         "-O3"
         "-Xcompiler"
         "-fPIC"
-        "-gencode=arch=compute_90a,code=sm_90a"
+	#"-gencode=arch=compute_90a,code=sm_90a"
         "-std=c++17"
         "-DCUTE_USE_PACKED_TUPLE=1"
         "-DCUTLASS_ENABLE_TENSOR_CORE_MMA=1"
@@ -373,7 +373,7 @@ if (SGL_KERNEL_ENABLE_FA3)
     if (ENABLE_BELOW_SM90)
         list(APPEND SGL_FLASH_KERNEL_CUDA_FLAGS
             "-gencode=arch=compute_80,code=sm_80"
-            "-gencode=arch=compute_86,code=sm_86"
+            "" #-gencode=arch=compute_86,code=sm_86"
         )
         # SM8X Logic
         file(GLOB FA3_SM8X_GEN_SRCS

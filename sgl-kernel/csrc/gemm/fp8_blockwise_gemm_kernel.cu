@@ -76,9 +76,9 @@ void launch_sm89_fp8_blockwise_scaled_mm(
       Tile<_32, _32, _32>>;
 
   using SmemLayoutAtomA = decltype(composition(
-      Swizzle<2, 4, 3>{}, Layout<Shape<_8, Int<ScaleGranularityK>>, Stride<Int<ScaleGranularityK>, _1>>{}));
+      Swizzle<3, 4, 3>{}, Layout<Shape<_8, Int<ScaleGranularityK>>, Stride<Int<ScaleGranularityK>, _1>>{}));
   using GmemTiledCopyA = decltype(make_tiled_copy(
-      Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<cute::uint128_t>, ElementA>{},
+      Copy_Atom<SM80_CP_ASYNC_CACHEGLOBAL<cute::uint128_t>, ElementA>{},
       Layout<
           Shape<Int<128 * AlignmentA / ScaleGranularityK>, Int<ScaleGranularityK / AlignmentA>>,
           Stride<Int<ScaleGranularityK / AlignmentA>, _1>>{},
