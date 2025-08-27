@@ -72,8 +72,8 @@ void launch_sm89_fp8_blockwise_scaled_mm(
   // This code section describes the MMA op and the tile size a warp will compute
   using TiledMma = TiledMMA<
       MMA_Atom<SM89_16x8x32_F32E4M3E4M3F32_TN>,
-      Layout<Shape<_2, _2, _1>>,  // 2x2x1 thread group
-      Tile<_32, _32, _32>>;
+      Layout<Shape<_1, _4, _1>>,  // 1x4x1 thread group
+      Tile<_16, _64, _32>>;
 
   using SmemLayoutAtomA = decltype(composition(
       Swizzle<3, 4, 3>{}, Layout<Shape<_8, Int<ScaleGranularityK>>, Stride<Int<ScaleGranularityK>, _1>>{}));
