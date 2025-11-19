@@ -70,11 +70,11 @@ void launch_sm89_fp8_blockwise_scaled_mm(
   // This code section describes the MMA op and the tile size a warp will compute
   using TiledMma = TiledMMA<
       MMA_Atom<SM89_16x8x32_F32E4M3E4M3F32_TN>,
-      Layout<Shape<_2, _2, _1>>,  // 2x2x1 thread group
-      Tile<_32, _32, _32>>;
+      Layout<Shape<_1, _4, _1>>,  // 2x2x1 thread group
+      Tile<_16, _64, _32>>;
 
   using SmemLayoutAtomA = decltype(composition(
-      Swizzle<2, 4, 3>{}, Layout<Shape<_8, Int<ScaleGranularityK>>, Stride<Int<ScaleGranularityK>, _1>>{}));
+      Swizzle<3, 4, 3>{}, Layout<Shape<_8, Int<ScaleGranularityK>>, Stride<Int<ScaleGranularityK>, _1>>{}));
   using GmemTiledCopyA = decltype(make_tiled_copy(
       Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<cute::uint128_t>, ElementA>{},
       Layout<
@@ -445,7 +445,12 @@ void sm89_fp8_blockwise_dispatch_shape(
     const torch::Tensor& scales_b) {
   using ClusterShape = Shape<_1, _1, _1>;
   if (a.size(1) == scales_a.size(1) * 128) {
-    launch_sm89_fp8_blockwise_scaled_mm<OutType, Shape<_64, _128, _128>, 4, 128>(out, a, b, scales_a, scales_b);
+    if(a.size(0) <= 128){
+      launch_sm89_fp8_blockwise_scaled_mm<OutType, Shape<_16, _128, _128>, 3, 128>(out, a, b, scales_a, scales_b);
+    }
+    else {
+      launch_sm89_fp8_blockwise_scaled_mm<OutType, Shape<_64, _128, _128>, 4, 128>(out, a, b, scales_a, scales_b);
+    }
   } else {
     launch_sm89_fp8_blockwise_scaled_mm<OutType, Shape<_128, _64, _64>, 4, 64>(out, a, b, scales_a, scales_b);
   }
